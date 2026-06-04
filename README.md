@@ -16,6 +16,30 @@ AI agents often waste tokens and introduce corruption by emitting entire replace
 
 `patch_file` makes the safer path the default: send only the smallest exact original block that identifies the edit, plus the replacement block. Exact-once matching prevents fuzzy or partial edits from landing in the wrong place.
 
+## Token and Latency Comparison
+
+For small edits in large files, `patch_file` keeps the agent response proportional to the edit instead of proportional to the whole file. The exact numbers vary by tokenizer, model, network, and file contents, but the shape is consistent: full-file rewrites scale with file size; surgical patches scale with the changed block plus a little context.
+
+Example: change one line in a 1,000-line TypeScript file.
+
+| Strategy | Agent output | Approx output tokens | Latency profile | Failure mode |
+| --- | ---: | ---: | --- | --- |
+| Full-file rewrite | Entire 1,000-line file | 8,000-20,000+ | Slowest: model must generate, transmit, and the runtime must write the whole file | Can drop unrelated lines, stale edits, comments, formatting, or concurrent user changes |
+| Unified diff | Diff hunks with line metadata | 80-400 | Moderate: compact output, but patch application may need parsing and hunk matching | Can fail or misapply if line numbers/context are stale or generated hunks are malformed |
+| `patch_file` | Minimal exact `search_block` plus `replace_block` | 20-120 | Fastest for small edits: model emits only the necessary text and the engine does one exact match | Fails closed if the block is missing or not unique |
+
+Example payload for the same one-line change:
+
+```json
+{
+  "file_path": "src/config.ts",
+  "search_block": "export const retries = 2;\n",
+  "replace_block": "export const retries = 3;\n"
+}
+```
+
+That payload is small enough for an agent loop to retry cheaply. If the file changed, the tool returns a structured error instead of guessing, and the agent can reread only the relevant file content before trying again.
+
 ## How Exact-Once Matching Works
 
 1. The target file is read from disk.
