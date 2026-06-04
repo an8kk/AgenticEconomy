@@ -9,4 +9,5 @@ All notable changes to this project will be documented in this file.
 - Added stable structured success and failure results.
 - Added workspace sandboxing, path traversal rejection, directory rejection, and binary file rejection.
 - Added same-directory temporary writes with rename-based replacement and best-effort sync.
+- Added a stdio MCP server exposing `patch_file` for MCP clients.
 - Added TypeScript declarations, public exports, tests, README, and MIT license.

@@ -18,6 +18,12 @@ export interface PatchFileInput {
   replace_block: string;
 }
 
+export interface PatchFileCamelCaseInput {
+  filePath: string;
+  searchBlock: string;
+  replaceBlock: string;
+}
+
 export interface PatchFileOptions {
   workspaceRoot?: string;
 }
@@ -72,16 +78,17 @@ interface DecodedFile {
 }
 
 export async function patchFile(
-  input: PatchFileInput,
+  input: PatchFileInput | PatchFileCamelCaseInput,
   options: PatchFileOptions = {},
 ): Promise<PatchFileResult> {
-  const validation = validateInput(input);
+  const normalizedInput = normalizeInput(input);
+  const validation = validateInput(normalizedInput);
   if (validation) {
     return validation;
   }
 
   const rootPath = path.resolve(options.workspaceRoot ?? process.cwd());
-  const targetPath = resolveTargetPath(rootPath, input.file_path);
+  const targetPath = resolveTargetPath(rootPath, normalizedInput.file_path);
   if (!isInsideOrSame(rootPath, targetPath)) {
     return failure(
       "PATH_OUTSIDE_WORKSPACE",
@@ -127,7 +134,7 @@ export async function patchFile(
     return failure("BINARY_FILE_REJECTED", "Refusing to edit a likely binary file.", targetPath);
   }
 
-  const matches = countExactOccurrences(decoded.text, input.search_block);
+  const matches = countExactOccurrences(decoded.text, normalizedInput.search_block);
   if (matches.count === 0) {
     return failure(
       "SEARCH_BLOCK_NOT_FOUND",
@@ -148,8 +155,8 @@ export async function patchFile(
 
   const updatedText =
     decoded.text.slice(0, matches.firstIndex) +
-    input.replace_block +
-    decoded.text.slice(matches.firstIndex + input.search_block.length);
+    normalizedInput.replace_block +
+    decoded.text.slice(matches.firstIndex + normalizedInput.search_block.length);
   const updatedBytes = encodeTextFile(updatedText, decoded.encoding);
 
   try {
@@ -167,6 +174,15 @@ export async function patchFile(
     after_chars: updatedText.length,
     before_bytes: originalBytes.byteLength,
     after_bytes: updatedBytes.byteLength,
+  };
+}
+
+function normalizeInput(input: PatchFileInput | PatchFileCamelCaseInput): PatchFileInput {
+  const candidate = input as Partial<PatchFileInput & PatchFileCamelCaseInput>;
+  return {
+    file_path: candidate.file_path ?? (candidate.filePath as string),
+    search_block: candidate.search_block ?? (candidate.searchBlock as string),
+    replace_block: candidate.replace_block ?? (candidate.replaceBlock as string),
   };
 }
 

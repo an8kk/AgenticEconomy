@@ -1,20 +1,45 @@
-# patch_file
+# AgenticEconomy 🛠️
 
-`patch_file` is a production-ready TypeScript/Node tool for AI agents that need to edit files safely without rewriting whole files.
+A zero-dependency core, atomic file-surgery tool for AI Agents. Natively supports programmatic TypeScript imports and the Model Context Protocol (MCP).
 
-Agents call it with three fields:
+Stop letting your agents execute full-file rewrites that burn tokens and increase latency. `AgenticEconomy` enforces an exact-match patching mechanism that guarantees predictable, lightweight workspace edits.
 
-- `file_path`
-- `search_block`
-- `replace_block`
+## 🚀 Quick Start (MCP Configuration)
 
-The engine reads the target file and applies the edit only when `search_block` appears exactly once. If the block is missing or ambiguous, the file is left unchanged and the tool returns a structured error that tells the agent how to retry.
+Add this to your client configuration (for example Claude Desktop, Cursor, or Windsurf) to integrate the tool instantly:
+
+```json
+{
+  "mcpServers": {
+    "agentic-economy": {
+      "command": "npx",
+      "args": ["-y", "patch-file-tool"]
+    }
+  }
+}
+```
+
+Set `PATCH_FILE_WORKSPACE_ROOT` in the MCP server environment when your client supports it. If omitted, the server uses its current working directory as the workspace sandbox.
+
+## 📦 Programmatic Usage (TypeScript)
+
+```ts
+import { patchFile } from "patch-file-tool";
+
+const result = await patchFile({
+  filePath: "src/index.ts",
+  searchBlock: "const x = 1;",
+  replaceBlock: "const x = 2;",
+}, { workspaceRoot: process.cwd() });
+```
 
 ## Why This Exists
 
 AI agents often waste tokens and introduce corruption by emitting entire replacement files for small edits. Full-file rewrites can accidentally drop imports, comments, generated sections, formatting, or user changes that appeared after the agent last read the file.
 
 `patch_file` makes the safer path the default: send only the smallest exact original block that identifies the edit, plus the replacement block. Exact-once matching prevents fuzzy or partial edits from landing in the wrong place.
+
+The MCP tool uses three snake_case fields: `file_path`, `search_block`, and `replace_block`. The programmatic TypeScript API accepts those names plus ergonomic camelCase aliases: `filePath`, `searchBlock`, and `replaceBlock`.
 
 ## Token and Latency Comparison
 
@@ -112,6 +137,41 @@ Public exports:
 - `PatchFileFailure`
 - `PatchFileErrorCode`
 - `PatchFileSchema`
+
+## MCP Usage
+
+This package also includes a stdio MCP server that exposes the same engine as a tool named `patch_file`.
+
+Build it first:
+
+```bash
+npm run build
+```
+
+Run the MCP server:
+
+```bash
+PATCH_FILE_WORKSPACE_ROOT=/path/to/workspace npx patch-file-mcp
+```
+
+For local development from this repository:
+
+```bash
+PATCH_FILE_WORKSPACE_ROOT=/path/to/workspace node dist/mcp-server.js
+```
+
+Example Codex MCP config:
+
+```toml
+[mcp_servers.patch_file]
+command = "node"
+args = ["/path/to/patch-file-tool/dist/mcp-server.js"]
+
+[mcp_servers.patch_file.env]
+PATCH_FILE_WORKSPACE_ROOT = "/path/to/workspace"
+```
+
+`PATCH_FILE_WORKSPACE_ROOT` is the sandbox root. If it is omitted, the MCP server uses its current working directory.
 
 ## JSON Schema
 

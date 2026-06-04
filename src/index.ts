@@ -1,6 +1,7 @@
 export { PATCH_FILE_ERROR_CODES, patchFile } from "./patch-file.js";
 export type {
   PatchFileErrorCode,
+  PatchFileCamelCaseInput,
   PatchFileFailure,
   PatchFileInput,
   PatchFileOptions,

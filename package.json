@@ -1,10 +1,14 @@
 {
   "name": "patch-file-tool",
   "version": "1.0.0",
-  "description": "Production-ready exact-once surgical file editing tool for AI agent runtimes.",
+  "description": "Atomic exact-match file-surgery tool and MCP server for AI agent runtimes.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "patch-file-tool": "dist/mcp-server.js",
+    "patch-file-mcp": "dist/mcp-server.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -13,6 +17,10 @@
     "./schema": {
       "types": "./dist/schema.d.ts",
       "import": "./dist/schema.js"
+    },
+    "./mcp-server": {
+      "types": "./dist/mcp-server.d.ts",
+      "import": "./dist/mcp-server.js"
     }
   },
   "scripts": {
@@ -33,18 +41,19 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/patch-file-tool.git"
+    "url": "git+https://github.com/an8kk/AgenticEconomy.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR_USERNAME/patch-file-tool/issues"
+    "url": "https://github.com/an8kk/AgenticEconomy/issues"
   },
-  "homepage": "https://github.com/YOUR_USERNAME/patch-file-tool#readme",
+  "homepage": "https://github.com/an8kk/AgenticEconomy#readme",
   "engines": {
     "node": ">=20"
   },
   "sideEffects": false,
   "files": [
     "dist",
+    "scripts",
     "schemas",
     "CHANGELOG.md",
     "LICENSE",
@@ -54,5 +63,9 @@
     "@types/node": "^20.14.0",
     "gpt-tokenizer": "^3.4.0",
     "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
   }
 }

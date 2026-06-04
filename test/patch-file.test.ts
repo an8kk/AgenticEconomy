@@ -43,6 +43,25 @@ test("replaces a search block that appears exactly once", async () => {
   });
 });
 
+test("accepts camelCase aliases for programmatic TypeScript callers", async () => {
+  await withWorkspace(async (workspaceRoot) => {
+    const filePath = path.join(workspaceRoot, "example.txt");
+    await writeFile(filePath, "const x = 1;\n", "utf8");
+
+    const result = await patchFile(
+      {
+        filePath: "example.txt",
+        searchBlock: "const x = 1;\n",
+        replaceBlock: "const x = 2;\n",
+      },
+      { workspaceRoot },
+    );
+
+    assert.equal(result.ok, true);
+    assert.equal(await readText(filePath), "const x = 2;\n");
+  });
+});
+
 test("returns SEARCH_BLOCK_NOT_FOUND and leaves file unchanged when the block is missing", async () => {
   await withWorkspace(async (workspaceRoot) => {
     const filePath = path.join(workspaceRoot, "example.txt");
