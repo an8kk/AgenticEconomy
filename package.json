@@ -1,0 +1,56 @@
+{
+  "name": "patch-file-tool",
+  "version": "1.0.0",
+  "description": "Production-ready exact-once surgical file editing tool for AI agent runtimes.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js"
+    }
+  },
+  "scripts": {
+    "clean": "node -e \"import('node:fs/promises').then(fs => Promise.all([fs.rm('dist', { recursive: true, force: true }), fs.rm('dist-test', { recursive: true, force: true })]))\"",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "test": "npm run clean && npm run build && tsc -p tsconfig.test.json && node --test dist-test/test/*.test.js"
+  },
+  "keywords": [
+    "ai-agent",
+    "agent-tools",
+    "file-editing",
+    "patch",
+    "search-replace",
+    "typescript"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/patch-file-tool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/patch-file-tool/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/patch-file-tool#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "schemas",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.0"
+  }
+}
