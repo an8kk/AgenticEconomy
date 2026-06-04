@@ -19,7 +19,8 @@
     "clean": "node -e \"import('node:fs/promises').then(fs => Promise.all([fs.rm('dist', { recursive: true, force: true }), fs.rm('dist-test', { recursive: true, force: true })]))\"",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
-    "test": "npm run clean && npm run build && tsc -p tsconfig.test.json && node --test dist-test/test/*.test.js"
+    "test": "npm run clean && npm run build && tsc -p tsconfig.test.json && node --test dist-test/test/*.test.js",
+    "tokens": "node scripts/token-comparison.mjs"
   },
   "keywords": [
     "ai-agent",
@@ -51,6 +52,7 @@
   ],
   "devDependencies": {
     "@types/node": "^20.14.0",
+    "gpt-tokenizer": "^3.4.0",
     "typescript": "^5.4.0"
   }
 }

@@ -18,27 +18,39 @@ AI agents often waste tokens and introduce corruption by emitting entire replace
 
 ## Token and Latency Comparison
 
-For small edits in large files, `patch_file` keeps the agent response proportional to the edit instead of proportional to the whole file. The exact numbers vary by tokenizer, model, network, and file contents, but the shape is consistent: full-file rewrites scale with file size; surgical patches scale with the changed block plus a little context.
+For small edits in large files, `patch_file` keeps the agent response proportional to the edit instead of proportional to the whole file. The exact token count depends on the tokenizer, model, and payload, so this repository includes a reproducible benchmark instead of relying on estimates.
 
-Example: change one line in a 1,000-line TypeScript file.
+Run it locally:
 
-| Strategy | Agent output | Approx output tokens | Latency profile | Failure mode |
-| --- | ---: | ---: | --- | --- |
-| Full-file rewrite | Entire 1,000-line file | 8,000-20,000+ | Slowest: model must generate, transmit, and the runtime must write the whole file | Can drop unrelated lines, stale edits, comments, formatting, or concurrent user changes |
-| Unified diff | Diff hunks with line metadata | 80-400 | Moderate: compact output, but patch application may need parsing and hunk matching | Can fail or misapply if line numbers/context are stale or generated hunks are malformed |
-| `patch_file` | Minimal exact `search_block` plus `replace_block` | 20-120 | Fastest for small edits: model emits only the necessary text and the engine does one exact match | Fails closed if the block is missing or not unique |
+```bash
+npm run tokens
+```
+
+Benchmark fixture:
+
+- tokenizer: `gpt-tokenizer/model/gpt-4o`
+- file: synthetic 1,000-line TypeScript file
+- edit: one line changed at line 500
+
+Measured output-token counts:
+
+| Strategy | Agent output | Exact output tokens | Output characters | Latency profile | Failure mode |
+| --- | ---: | ---: | ---: | --- | --- |
+| Full-file rewrite | Entire 1,000-line file | 9,002 | 31,894 | Slowest: model must generate, transmit, and the runtime must write the whole file | Can drop unrelated lines, stale edits, comments, formatting, or concurrent user changes |
+| Unified diff | Diff hunk with line metadata | 99 | 339 | Moderate: compact output, but patch application may need parsing and hunk matching | Can fail or misapply if line numbers/context are stale or generated hunks are malformed |
+| `patch_file` | Minimal exact `search_block` plus `replace_block` | 48 | 156 | Fastest for small edits: model emits only the necessary text and the engine does one exact match | Fails closed if the block is missing or not unique |
 
 Example payload for the same one-line change:
 
 ```json
 {
-  "file_path": "src/config.ts",
-  "search_block": "export const retries = 2;\n",
-  "replace_block": "export const retries = 3;\n"
+  "file_path": "src/generated-config.ts",
+  "search_block": "export const setting0500 = 500;\n",
+  "replace_block": "export const setting0500 = 9001;\n"
 }
 ```
 
-That payload is small enough for an agent loop to retry cheaply. If the file changed, the tool returns a structured error instead of guessing, and the agent can reread only the relevant file content before trying again.
+That payload is small enough for an agent loop to retry cheaply. If the file changed, the tool returns a structured error instead of guessing, and the agent can reread only the relevant file content before trying again. End-to-end model latency still depends on the provider and model, but output generation and transmission scale directly with these measured output-token counts.
 
 ## How Exact-Once Matching Works
 
